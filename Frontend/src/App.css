@@ -1,0 +1,64 @@
+/* src/App.css */
+* { box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+body { margin: 0; background-color: #0d1117; color: #c9d1d9; }
+
+.dashboard { display: flex; height: 100vh; }
+
+/* Sidebar */
+.sidebar {
+  width: 260px;
+  background-color: #161b22;
+  border-right: 1px solid #30363d;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+.logo { font-size: 24px; font-weight: bold; color: #58a6ff; margin-bottom: 40px; text-shadow: 0 0 10px rgba(88,166,255,0.4); }
+.nav-item { padding: 12px 15px; margin-bottom: 10px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-weight: 500; }
+.nav-item:hover, .nav-item.active { background-color: #1f6feb20; color: #58a6ff; border: 1px solid #1f6feb50; }
+
+/* Main Content area */
+.main-content { flex: 1; display: flex; flex-direction: column; }
+
+.topbar {
+  height: 70px;
+  border-bottom: 1px solid #30363d;
+  display: flex;
+  align-items: center;
+  padding: 0 30px;
+  background-color: #0d1117;
+}
+.search-bar {
+  background-color: #161b22;
+  border: 1px solid #30363d;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 20px;
+  width: 400px;
+  outline: none;
+}
+.search-bar:focus { border-color: #58a6ff; box-shadow: 0 0 8px rgba(88,166,255,0.2); }
+
+/* Live Log Area */
+.log-container { padding: 30px; flex: 1; overflow-y: auto; }
+.section-title { margin-top: 0; display: flex; align-items: center; gap: 10px; }
+.live-indicator { width: 10px; height: 10px; background: #2ea043; border-radius: 50%; box-shadow: 0 0 10px #2ea043; animation: pulse 1.5s infinite; }
+
+.log-box {
+  background-color: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  padding: 20px;
+  font-family: 'Courier New', monospace;
+  height: 600px;
+  overflow-y: auto;
+}
+
+.log-line { padding: 8px 0; border-bottom: 1px solid #21262d; font-size: 14px; }
+.log-time { color: #8b949e; margin-right: 15px; }
+.log-service { color: #d2a8ff; margin-right: 15px; font-weight: bold; }
+.badge-info { color: #58a6ff; }
+.badge-warn { color: #e3b341; }
+.badge-error { color: #f85149; font-weight: bold; }
+
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }

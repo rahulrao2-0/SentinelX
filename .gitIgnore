@@ -1,0 +1,7 @@
+Backend/node_modules/
+Frontend/node_modules/
+Backend/.env
+Frontend/.env
+SentinelX-sdk/
+Test.js
+docker-compose.yml
