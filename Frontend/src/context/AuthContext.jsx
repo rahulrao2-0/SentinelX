@@ -3,19 +3,33 @@ import React, { createContext, useState, useContext } from 'react';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    try {
+      const stored = localStorage.getItem('sentinelx_user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const isAuthenticated = Boolean(user);
 
   const login = (userData) => {
-    // API logic goes here later
-    setIsAuthenticated(true);
     setUser(userData);
+    try {
+      localStorage.setItem('sentinelx_user', JSON.stringify(userData));
+    } catch {
+      // storage error fallback
+    }
   };
 
   const logout = () => {
-    // API logic goes here later
-    setIsAuthenticated(false);
     setUser(null);
+    try {
+      localStorage.removeItem('sentinelx_user');
+    } catch {
+      // storage error fallback
+    }
   };
 
   return (

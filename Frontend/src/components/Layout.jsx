@@ -165,8 +165,11 @@ export default function Layout({ children }) {
                 sx: { mt: 1.5, minWidth: 150, border: '1px solid', borderColor: 'divider' }
               }}
             >
-              <MenuItem disabled sx={{ opacity: '1 !important', borderBottom: '1px solid', borderColor: 'divider', mb: 1 }}>
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>{user?.name || 'Administrator'}</Typography>
+              <MenuItem disabled sx={{ opacity: '1 !important', borderBottom: '1px solid', borderColor: 'divider', mb: 1, display: 'block' }}>
+                <Typography variant="body2" sx={{ fontWeight: 700 }}>{user?.name || 'Engineer'}</Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                  Role: {user?.role || 'engineer'} &bull; {user?.projectName || 'Local Mart'}
+                </Typography>
               </MenuItem>
               <MenuItem onClick={handleLogout}>Log out</MenuItem>
             </Menu>

@@ -1,3 +1,7 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
+import { connectDB } from './src/config/db.js';
 import express from 'express';
 import cors from 'cors';
 import { createServer } from 'http';
@@ -6,6 +10,7 @@ import authRoutes from './src/routes/auth.js';
 import logsRoutes from './src/routes/logs.js';
 import { connectProducer } from './src/kafka/producer.js';
 import { startConsumer } from './src/kafka/consumer.js';
+
 
 const app = express();
 const PORT = 3000;
@@ -25,6 +30,7 @@ app.use(express.json({ limit: '50mb' })); // Increased limit to handle massive l
 app.use('/api/auth', authRoutes); 
 app.use('/api/logs', logsRoutes);
 
+
 // Socket.io Setup
 io.on('connection', (socket) => {
   console.log(`[Socket.io] Client connected: ${socket.id}`);
@@ -38,24 +44,25 @@ io.on('connection', (socket) => {
   });
 });
 
-// Initialize Kafka and start server
-const startServer = async () => {
-  try {
-    // Connect Kafka Producer
-    await connectProducer();
-    
-    // Start Kafka Consumer and pass the socket.io instance
-    // Note: If Kafka isn't running locally, this might throw an error and crash.
-    // Ensure Zookeeper and Kafka are running on localhost:9092
-    await startConsumer(io);
+// Start HTTP server immediately
+httpServer.listen(PORT, () => {
+  console.log(`🚀 SentinelX API Server is running on http://localhost:${PORT}`);
+});
 
-    // Start the server
-    httpServer.listen(PORT, () => {
-      console.log(`🚀 SentinelX API Server is running on http://localhost:${PORT}`);
-    });
+// Initialize database and Kafka services concurrently in the background
+const initServices = async () => {
+  try {
+    await connectDB();
+
+    // Connect Kafka Producer and Consumer concurrently without blocking server startup
+    await Promise.all([
+      connectProducer(),
+      startConsumer(io)
+    ]);
+    console.log('✅ Kafka services initialized');
   } catch (err) {
-    console.error('Failed to start server:', err);
+    console.error('❌ Failed to initialize background services:', err);
   }
 };
 
-startServer();
+initServices(); 

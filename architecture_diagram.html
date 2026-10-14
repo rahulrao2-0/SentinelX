@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SentinelX — Architecture & Pipelines Visualizer</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0A1929;
+      --card-bg: #001E3C;
+      --card-border: rgba(194, 224, 255, 0.12);
+      --accent: #3399FF;
+      --accent-hover: #66B2FF;
+      --text-main: #F3F6F9;
+      --text-muted: #B2BAC2;
+      --danger: #FF4D4F;
+      --success: #52C41A;
+      --warning: #FAAD14;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      padding: 24px;
+      line-height: 1.6;
+    }
+
+    header {
+      max-width: 1400px;
+      margin: 0 auto 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand h1 {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #fff;
+    }
+
+    .brand .badge {
+      background: rgba(51, 153, 255, 0.2);
+      color: var(--accent);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .tabs {
+      max-width: 1400px;
+      margin: 0 auto 24px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tab-btn:hover {
+      border-color: var(--accent);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+
+    .tab-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(51, 153, 255, 0.4);
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .panel {
+      display: none;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 28px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    .panel-header {
+      margin-bottom: 20px;
+    }
+
+    .panel-header h2 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #fff;
+    }
+
+    .panel-header p {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .diagram-card {
+      background: #061524;
+      border-radius: 12px;
+      padding: 24px;
+      border: 1px solid rgba(255,255,255,0.05);
+      overflow-x: auto;
+    }
+
+    .explanation-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .step-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      padding: 16px;
+      border-radius: 10px;
+    }
+
+    .step-card h3 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    .step-card p {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--card-border);
+      font-size: 14px;
+    }
+
+    th {
+      color: var(--text-muted);
+      font-weight: 600;
+      background: rgba(255,255,255,0.02);
+    }
+
+    td strong {
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <span style="font-size: 28px;">🛡️</span>
+      <h1>SentinelX Architecture Visualizer</h1>
+      <span class="badge">Live Spec v1.0</span>
+    </div>
+    <div style="font-size: 13px; color: var(--text-muted);">
+      Interactive Diagrams & Pipeline Flows
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('master')">🏗️ Master System</button>
+    <button class="tab-btn" onclick="switchTab('ingestion')">⚡ 1. Ingestion Pipeline</button>
+    <button class="tab-btn" onclick="switchTab('livestream')">📺 2. Live Log Streaming</button>
+    <button class="tab-btn" onclick="switchTab('alerting')">🚨 3. Alert & Incident Pipeline</button>
+    <button class="tab-btn" onclick="switchTab('search')">🔍 4. Search & Trace Correlation</button>
+    <button class="tab-btn" onclick="switchTab('matrix')">📊 Tech Responsibility Matrix</button>
+  </div>
+
+  <div class="container">
+
+    <!-- TAB 1: MASTER SYSTEM -->
+    <div id="master" class="panel active">
+      <div class="panel-header">
+        <h2>🏗️ Master System Architecture</h2>
+        <p>End-to-end overview showing client SDK, Express API gateway, Kafka message pipeline, async consumers, storage engines, Redis Pub/Sub, Socket.IO, and Frontend pages.</p>
+      </div>
+      <div class="diagram-card">
+        <pre class="mermaid">
+flowchart TD
+    subgraph ClientApps["1. Client Applications"]
+        AppA["Microservice: Payment Service"]
+        AppB["Microservice: Auth Service"]
+        SDK["SentinelX SDK\n- Buffers 1s\n- Uncaught exception listener\n- traceId generator"]
+        AppA --> SDK
+        AppB --> SDK
+    end
+
+    subgraph APILayer["2. API Gateway & Ingestion"]
+        Ingest["POST /api/logs/ingest\nHeader: x-api-key"]
+        Stamper["API Key Validator & Tenant Stamper\n- Validates x-api-key\n- Injects projectId & receivedAt"]
+        SDK --> Ingest
+        Ingest --> Stamper
+    end
+
+    subgraph KafkaQueue["3. Message Pipeline (Kafka)"]
+        Producer["Kafka Producer"]
+        KafkaTopic["Topic: logs-raw\n- 7-Day Disk Persistence"]
+        Stamper --> Producer
+        Producer --> KafkaTopic
+    end
+
+    subgraph ConsumerLayer["4. Kafka Consumers"]
+        ESWriter["Consumer 1: ES Writer\n- Reads ALL logs"]
+        AlertChecker["Consumer 2: Alert Checker\n- Reads: error, warn"]
+        AnomalyDetector["Consumer 3: Anomaly Detector\n- Error ratio baselines"]
+        KafkaTopic --> ESWriter
+        KafkaTopic --> AlertChecker
+        KafkaTopic --> AnomalyDetector
+    end
+
+    subgraph Storages["5. Storage Engines"]
+        MySQL[("MySQL\nprojects, users\nalert_rules, incidents")]
+        ES[("Elasticsearch\nsentinelx-logs\nFull-text search")]
+        RedisStore[("Redis Memory\nCounters, locks, sessions")]
+    end
+
+    Stamper -.-> MySQL
+    ESWriter --> ES
+    AlertChecker --> RedisStore
+    AlertChecker --> MySQL
+    AnomalyDetector --> RedisStore
+    AnomalyDetector --> MySQL
+
+    subgraph Realtime["6. Real-Time Intercom & WebSocket"]
+        RedisPubSub["Redis Pub/Sub Channels\nlogs:live:{projectId}\nalerts:{projectId}"]
+        SocketIO["Socket.IO Server\nRoom: live_logs_{projectId}"]
+        ESWriter --> RedisPubSub
+        AlertChecker --> RedisPubSub
+        AnomalyDetector --> RedisPubSub
+        RedisPubSub --> SocketIO
+    end
+
+    subgraph Frontend["7. React Frontend"]
+        Dashboard["Dashboard.jsx\nLive Alerts & Stats"]
+        DebugRoom["DebugRoom.jsx\nLive Terminal Stream"]
+        Search["SearchLogs.jsx\nNL Search"]
+        SocketIO --> DebugRoom
+        SocketIO --> Dashboard
+    end
+        </pre>
+      </div>
+    </div>
+
+    <!-- TAB 2: INGESTION -->
+    <div id="ingestion" class="panel">
+      <div class="panel-header">
+        <h2>⚡ Pipeline 1: Log Ingestion & Multi-Tenant Stamping</h2>
+        <p>How logs are batched by the SDK, authenticated by the API Gateway, enriched with the customer's Project ID, and safely queued onto Kafka.</p>
+      </div>
+      <div class="diagram-card">
+        <pre class="mermaid">
+sequenceDiagram
+    autonumber
+    actor DevApp as Client App (e.g. Payment)
+    participant SDK as SentinelX SDK
+    participant API as Express API (/api/logs/ingest)
+    participant DB as MySQL (projects table)
+    participant Kafka as Kafka Topic: logs-raw
+
+    DevApp->>SDK: sentinelx.log('error', 'DB connection failed')
+    Note over SDK: Buffers log in memory (1 second window)
+    SDK->>API: HTTP POST /api/logs/ingest (Header: x-api-key)
+    API->>DB: Look up project where api_key = x-api-key
+    DB-->>API: Returns project { id: "proj_101", name: "Local Mart" }
+    Note over API: Stamping:<br/>log.projectId = "proj_101"<br/>log.receivedAt = 2026-10-13T...
+    API->>Kafka: producer.send({ topic: 'logs-raw', messages: [...] })
+    Kafka-->>API: ACK (written to disk buffer)
+    API-->>SDK: 200 OK { success: true }
+    Note over SDK: Flushes in-memory buffer safely
+        </pre>
+      </div>
+      <div class="explanation-grid">
+        <div class="step-card">
+          <h3>1. 1-Second SDK Buffer</h3>
+          <p>Prevents flooding the network with 10,000 HTTP requests. Logs are sent in batches once per second.</p>
+        </div>
+        <div class="step-card">
+          <h3>2. Multi-Tenancy Guarantee</h3>
+          <p>The client only supplies <code>x-api-key</code>. The backend stamps the real <code>projectId</code> so clients cannot spoof another tenant's data.</p>
+        </div>
+        <div class="step-card">
+          <h3>3. Decoupled Buffer</h3>
+          <p>Kafka accepts the log and returns 200 OK in milliseconds. If Elasticsearch is slow or rebuilding indices, the client app never freezes.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: LIVE STREAMING -->
+    <div id="livestream" class="panel">
+      <div class="panel-header">
+        <h2>📺 Pipeline 2: Live Log Streaming</h2>
+        <p>How logs move from Kafka to Elasticsearch for permanent indexing, and simultaneously publish through Redis Pub/Sub to Socket.IO into the browser.</p>
+      </div>
+      <div class="diagram-card">
+        <pre class="mermaid">
+sequenceDiagram
+    autonumber
+    participant Kafka as Kafka Topic: logs-raw
+    participant ESWriter as Consumer: ES Writer
+    participant ES as Elasticsearch (sentinelx-logs)
+    participant RedisPS as Redis Pub/Sub (logs:live:proj_101)
+    participant SIO as Socket.IO Server
+    actor Browser as Frontend (DebugRoom.jsx)
+
+    Kafka->>ESWriter: Pulls batch of raw logs
+    par Persistent Storage
+        ESWriter->>ES: Bulk index logs (for search & analytics)
+    and Real-Time Fanout
+        ESWriter->>RedisPS: PUBLISH "logs:live:proj_101" (log payload)
+        RedisPS->>SIO: sub.on('message') receives log
+        SIO->>Browser: io.to('live_logs_proj_101').emit('new_log', log)
+        Note over Browser: Log rendered instantly on live terminal canvas
+    end
+        </pre>
+      </div>
+      <div class="explanation-grid">
+        <div class="step-card">
+          <h3>Why Redis Pub/Sub?</h3>
+          <p>Allows running multiple API servers behind a load balancer. Any consumer worker can publish to Redis, and all Socket.io nodes receive it.</p>
+        </div>
+        <div class="step-card">
+          <h3>Room-Based Isolation</h3>
+          <p>Socket.IO delivers logs strictly to <code>live_logs_{projectId}</code> so engineers only view logs for their own organization.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: ALERTING -->
+    <div id="alerting" class="panel">
+      <div class="panel-header">
+        <h2>🚨 Pipeline 3: Alert & Incident Detection</h2>
+        <p>How the Alert Checker consumer counts errors in sliding windows, executes distributed locks to prevent spam, creates incident records, and triggers dashboard alerts.</p>
+      </div>
+      <div class="diagram-card">
+        <pre class="mermaid">
+sequenceDiagram
+    autonumber
+    participant Kafka as Kafka Topic: logs-raw
+    participant AlertChecker as Consumer: Alert Checker
+    participant Redis as Redis (Counters & Locks)
+    participant DB as MySQL (alert_rules & incidents)
+    participant RedisPS as Redis Pub/Sub (alerts:proj_101)
+    participant SIO as Socket.IO Server
+    actor Browser as Frontend (Dashboard.jsx)
+
+    Kafka->>AlertChecker: Pulls log where level == 'error'
+    AlertChecker->>Redis: INCR error_count:proj_101:payment-service:window_1m
+    Redis-->>AlertChecker: Current count = 6
+    AlertChecker->>DB: Check rules (threshold = 5 errors / 1 min)
+    Note over AlertChecker: ⚠️ Threshold breached!
+    AlertChecker->>Redis: SET lock:alert:rule_101 NX EX 60 (Prevent duplicate spam)
+    alt Lock Acquired (First time triggering)
+        AlertChecker->>DB: INSERT INTO incidents (id, project_id, rule_id, status='active')
+        AlertChecker->>RedisPS: PUBLISH "alerts:proj_101" (Incident details)
+        RedisPS->>SIO: Received alert notification
+        SIO->>Browser: io.to('live_logs_proj_101').emit('new_alert', incident)
+        Note over Browser: 🚨 Red banner pops up + Active Incident counter increments!
+    else Lock Exists
+        Note over AlertChecker: Alert already active, suppress repeat notification
+    end
+        </pre>
+      </div>
+    </div>
+
+    <!-- TAB 5: SEARCH -->
+    <div id="search" class="panel">
+      <div class="panel-header">
+        <h2>🔍 Pipeline 4: Search & Trace Correlation</h2>
+        <p>Translating natural language queries into Elasticsearch DSL with hardcoded multi-tenancy filters, and resolving distributed trace chains.</p>
+      </div>
+      <div class="diagram-card">
+        <pre class="mermaid">
+sequenceDiagram
+    autonumber
+    actor Engineer as Engineer
+    participant Frontend as SearchLogs.jsx
+    participant API as GET /api/logs/search?q=...
+    participant RedisCache as Redis Search Cache
+    participant ES as Elasticsearch Cluster
+
+    Engineer->>Frontend: Types: "payment errors last hour"
+    Frontend->>API: GET /api/logs/search?q=payment+errors&time=1h
+    API->>RedisCache: Check cached query result
+    alt Cache Hit
+        RedisCache-->>API: Returns cached JSON
+    else Cache Miss
+        Note over API: Translates query into ES Query DSL<br/>Enforces multi-tenancy filter:<br/>{ filter: { term: { projectId: user.projectId } } }
+        API->>ES: Run search query + aggregations
+        ES-->>API: Returns matching log documents
+        API->>RedisCache: SETEX search:cache:key 30s
+    end
+    API-->>Frontend: JSON results array
+    Frontend-->>Engineer: Displays logs table with highlighted terms & clickable traceId
+    Engineer->>Frontend: Clicks traceId (e.g. "trace-8f7a1")
+    Frontend->>API: GET /api/logs/trace/trace-8f7a1
+    API->>ES: Query all logs where traceId = "trace-8f7a1" ORDER BY timestamp ASC
+    ES-->>API: Full sequence: Gateway -> Auth -> Order -> Payment
+    API-->>Frontend: Returns microservice call chain with root cause highlighted!
+        </pre>
+      </div>
+    </div>
+
+    <!-- TAB 6: TECH MATRIX -->
+    <div id="matrix" class="panel">
+      <div class="panel-header">
+        <h2>📊 Technology Responsibility Matrix</h2>
+        <p>Clear division of duties across all 7 layers of SentinelX.</p>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Technology</th>
+            <th>Primary Role</th>
+            <th>Why This Tool Was Selected</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>SentinelX SDK</strong></td>
+            <td>Log Capture & 1s Buffer</td>
+            <td>Buffers logs for 1 second in memory; catches uncaught exceptions automatically.</td>
+          </tr>
+          <tr>
+            <td><strong>Node.js / Express</strong></td>
+            <td>API Gateway & Ingestion</td>
+            <td>Event-driven, low latency, handles high-throughput log ingestion and serves REST endpoints.</td>
+          </tr>
+          <tr>
+            <td><strong>Apache Kafka</strong></td>
+            <td>Shock Absorber & Fan-Out Queue</td>
+            <td>Stores logs on disk for 7 days; fan-outs the exact same log stream to 3 independent consumer groups.</td>
+          </tr>
+          <tr>
+            <td><strong>Elasticsearch</strong></td>
+            <td>Search & Aggregations Engine</td>
+            <td>Fast full-text search, fuzzy matching, date histogram aggregations, trace correlation.</td>
+          </tr>
+          <tr>
+            <td><strong>MySQL</strong></td>
+            <td>Relational Business Data</td>
+            <td>ACID compliance for Projects, Users, Alert Rules, and Incident records.</td>
+          </tr>
+          <tr>
+            <td><strong>Redis</strong></td>
+            <td>Cache, Counters & Intercom</td>
+            <td>Fast atomic counters (<code>INCR</code>), sliding-window rate limiting, distributed locks (<code>SET NX EX</code>), and Pub/Sub backend notifications.</td>
+          </tr>
+          <tr>
+            <td><strong>Socket.IO</strong></td>
+            <td>Server-to-Browser Push</td>
+            <td>Delivers real-time logs, emergency alerts, and debug room chat directly to the React frontend.</td>
+          </tr>
+          <tr>
+            <td><strong>React + MUI</strong></td>
+            <td>Operations Dashboard</td>
+            <td>Dark-mode interface for monitoring live streams, managing alert rules, searching logs, and collaborating in debug rooms.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      themeVariables: {
+        darkMode: true,
+        background: '#061524',
+        primaryColor: '#0059B2',
+        primaryTextColor: '#F3F6F9',
+        primaryBorderColor: '#3399FF',
+        lineColor: '#66B2FF',
+        secondaryColor: '#001E3C',
+        tertiaryColor: '#0A1929'
+      }
+    });
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active'));
+      
+      const targetBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(tabId));
+      if (targetBtn) targetBtn.classList.add('active');
+      
+      const targetPanel = document.getElementById(tabId);
+      if (targetPanel) {
+        targetPanel.classList.add('active');
+      }
+    }
+  </script>
+</body>
+</html>
